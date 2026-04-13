@@ -78,7 +78,7 @@ export default function LoginPage() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-bold text-forest-700 mb-1">
+              <label className="block text-sm font-bold text-forest-700 mb-2">
                 📧 Parent/Guardian Email
               </label>
               <input
@@ -93,7 +93,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-forest-700 mb-1">
+              <label className="block text-sm font-bold text-forest-700 mb-2">
                 🔑 Password
               </label>
               <input
@@ -111,7 +111,7 @@ export default function LoginPage() {
               id="login-submit"
               type="submit"
               disabled={isLoading}
-              className="game-btn game-btn-primary w-full text-lg"
+              className="game-btn game-btn-primary w-full text-lg mt-4"
             >
               {isLoading ? (
                 <span className="animate-wiggle inline-block">🦉 Entering...</span>
@@ -122,7 +122,7 @@ export default function LoginPage() {
           </form>
 
           {/* Sign up link */}
-          <div className="text-center mt-6">
+          <div className="text-center mt-8 pt-6 border-t border-forest-100">
             <p className="text-forest-600 font-semibold">
               New explorer?{" "}
               <Link

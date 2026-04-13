@@ -152,7 +152,7 @@ export default function QuizPage() {
       case "letter-match":
       case "tab-match":
         return (
-          <div>
+          <div className="w-full flex flex-col items-center">
             <div className="text-center mb-6">
               <span
                 className="inline-block text-6xl font-bold text-forest-800 bg-sun-300/50 rounded-2xl px-8 py-4 animate-pop-in"
@@ -161,7 +161,7 @@ export default function QuizPage() {
                 {question.targetLetter || question.targetLetters}
               </span>
             </div>
-            <div className="grid grid-cols-3 gap-4 max-w-sm mx-auto">
+            <div className="grid grid-cols-3 gap-6 max-w-sm mx-auto">
               {question.options.map((opt) => (
                 <button
                   key={opt}
@@ -183,7 +183,7 @@ export default function QuizPage() {
 
       case "fill-blank":
         return (
-          <div className="text-center">
+          <div className="w-full flex flex-col items-center">
             <div className="mb-4">
               <button
                 className="game-btn game-btn-warning text-sm mb-4"
@@ -200,7 +200,7 @@ export default function QuizPage() {
               </button>
             </div>
             <div
-              className="text-5xl font-bold text-forest-800 mb-6 tracking-widest"
+              className="text-6xl font-bold text-forest-800 mb-8 tracking-[0.2em]"
               style={{ fontFamily: "var(--font-display)" }}
             >
               {question.displayWord}
@@ -230,7 +230,7 @@ export default function QuizPage() {
         });
 
         return (
-          <div className="text-center">
+          <div className="w-full flex flex-col items-center">
             {/* Image placeholder */}
             <div className="text-6xl mb-4">
               {question.displayImage === "duck" ? "🦆" : "🪷"}
@@ -285,7 +285,7 @@ export default function QuizPage() {
 
       case "image-match":
         return (
-          <div>
+          <div className="w-full flex flex-col items-center">
             <div className="text-center mb-4">
               <span
                 className="text-4xl font-bold text-forest-800"
@@ -309,8 +309,7 @@ export default function QuizPage() {
                     isChecked && selectedAnswer === opt.id && opt.id !== question.answer ? "!border-red-400 !bg-red-50 animate-shake" : ""
                   }`}
                 >
-                  <div className="text-4xl mb-2">{opt.emoji}</div>
-                  <p className="font-bold text-forest-700 text-sm">{opt.label}</p>
+                  <div className="text-6xl">{opt.emoji}</div>
                 </button>
               ))}
             </div>
@@ -319,7 +318,7 @@ export default function QuizPage() {
 
       case "counting":
         return (
-          <div className="text-center">
+          <div className="w-full flex flex-col items-center">
             <div className="flex flex-wrap justify-center gap-2 mb-6 p-4 bg-sky-100/50 rounded-2xl">
               {[...Array(question.count)].map((_, i) => (
                 <span
@@ -354,7 +353,7 @@ export default function QuizPage() {
       case "math":
       case "division":
         return (
-          <div className="text-center">
+          <div className="w-full flex flex-col items-center">
             <div
               className="text-5xl font-bold text-forest-800 mb-6"
               style={{ fontFamily: "var(--font-display)" }}
@@ -375,7 +374,7 @@ export default function QuizPage() {
 
       case "missing-number":
         return (
-          <div className="text-center">
+          <div className="w-full flex flex-col items-center">
             <div className="flex justify-center items-center gap-4 mb-6">
               {question.sequence.map((item, i) => (
                 <React.Fragment key={i}>
@@ -421,7 +420,7 @@ export default function QuizPage() {
             >
               <div className="text-6xl mb-2">{question.leftEmoji}</div>
               <p className="font-bold text-forest-700">{question.leftLabel}</p>
-              <p className="text-xs text-forest-500 mt-1">⬅️ LEFT</p>
+              <p className="text-xs text-forest-500 mt-1"></p>
             </button>
             <button
               onClick={() => !isChecked && setSelectedAnswer("right")}
@@ -437,14 +436,14 @@ export default function QuizPage() {
             >
               <div className="text-6xl mb-2">{question.rightEmoji}</div>
               <p className="font-bold text-forest-700">{question.rightLabel}</p>
-              <p className="text-xs text-forest-500 mt-1">RIGHT ➡️</p>
+              <p className="text-xs text-forest-500 mt-1"></p>
             </button>
           </div>
         );
 
       case "rhyme":
         return (
-          <div>
+          <div className="w-full flex flex-col items-center text-center">
             <div className="text-center mb-6">
               <span
                 className="inline-block text-5xl font-bold text-candy-purple bg-candy-purple/10 rounded-2xl px-8 py-4"
@@ -495,7 +494,7 @@ export default function QuizPage() {
         }
 
         return (
-          <div className="text-center">
+          <div className="w-full flex flex-col items-center text-center">
             {question.hint && (
               <p className="text-sm text-forest-600 mb-4 font-semibold">{question.hint}</p>
             )}
@@ -552,7 +551,7 @@ export default function QuizPage() {
 
       case "place-value":
         return (
-          <div className="text-center">
+          <div className="w-full flex flex-col items-center text-center">
             <div className="text-5xl font-bold text-forest-800 mb-2" style={{ fontFamily: "var(--font-display)" }}>
               {question.number.split("").map((char, i) => (
                 <span
@@ -580,7 +579,7 @@ export default function QuizPage() {
 
       case "shape-identify":
         return (
-          <div className="text-center">
+          <div className="w-full flex flex-col items-center text-center">
             <div className="flex justify-center gap-6 mb-6 flex-wrap">
               {question.shapes.map((s) => (
                 <div key={s.shape} className="text-center">
@@ -622,10 +621,10 @@ export default function QuizPage() {
   };
 
   return (
-    <div className="min-h-screen relative flex flex-col">
+    <div className="min-h-screen flex items-center justify-center p-4 relative">
       <NatureBackground />
 
-      <div className="relative z-10 p-4 md:p-6 max-w-2xl mx-auto w-full flex-1 flex flex-col justify-center">
+      <div className="relative z-10 w-full max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
@@ -640,35 +639,42 @@ export default function QuizPage() {
         </div>
 
         {/* Question Card */}
-        <div className="glass-card p-8 md:p-10 animate-slide-up" key={`q-${currentIdx}`}>
-          {/* Question number */}
-          <div className="flex items-center gap-3 mb-6">
-            <span className="bg-forest-500 text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-xl shrink-0" style={{ fontFamily: "var(--font-display)" }}>
+        <div className="glass-card p-8 md:p-10 animate-slide-up flex flex-col items-center" key={`q-${currentIdx}`}>
+          {/* Question number & Prompt */}
+          <div className="flex flex-col items-center text-center gap-4 mb-8 w-full">
+            <span className="bg-forest-500 text-white rounded-full w-14 h-14 flex items-center justify-center font-bold text-2xl shadow-lg animate-bounce-gentle shrink-0" style={{ fontFamily: "var(--font-display)" }}>
               {currentIdx + 1}
             </span>
-            <h2 className="text-xl md:text-2xl text-forest-800 font-bold" style={{ fontFamily: "var(--font-display)" }}>
+            <h2 className="text-2xl md:text-3xl text-forest-800 font-bold leading-tight" style={{ fontFamily: "var(--font-display)" }}>
               {question.prompt}
             </h2>
           </div>
 
           {/* Question body */}
-          <div className="mb-8 px-2 md:px-4">{renderQuestion()}</div>
+          <div className="mb-8 px-2 md:px-4 w-full flex flex-col items-center">{renderQuestion()}</div>
 
           {/* Feedback */}
           {isChecked && (
             <div
-              className={`p-4 rounded-xl mb-4 text-center font-bold animate-pop-in ${
+              className={`p-6 rounded-2xl mb-6 text-center font-bold animate-pop-in shadow-sm ${
                 isCorrect
                   ? "bg-green-50 border-2 border-green-300 text-green-700"
                   : "bg-red-50 border-2 border-red-200 text-red-600"
               }`}
             >
-              {isCorrect ? "✅ Correct! Amazing! 🎉" : `❌ The answer was: ${question.answer}`}
+              <div className="text-lg">
+                {isCorrect ? "✅ Correct! Amazing! 🎉" : "❌ Not quite right"}
+              </div>
+              {!isCorrect && (
+                <p className="mt-2 text-forest-600 font-semibold">
+                  The answer was: <span className="text-forest-800 underline decoration-wavy decoration-red-300">{question.answer}</span>
+                </p>
+              )}
             </div>
           )}
 
           {/* Action buttons */}
-          <div className="flex justify-center gap-4 pt-2">
+          <div className="flex justify-center gap-4 mt-8 pt-6 border-t border-forest-100 w-full">
             {!isChecked ? (
               <button
                 onClick={handleCheck}

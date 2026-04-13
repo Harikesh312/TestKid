@@ -141,10 +141,10 @@ export default function ReadingPage() {
   };
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen flex items-center justify-center p-4 relative">
       <NatureBackground />
 
-      <div className="relative z-10 p-4 max-w-2xl mx-auto flex flex-col items-center justify-center min-h-screen">
+      <div className="relative z-10 w-full max-w-2xl mx-auto py-8">
         {/* Header */}
         <div className="text-center mb-6 animate-slide-up">
           <span

@@ -69,7 +69,7 @@ export default function SignupPage() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-bold text-forest-700 mb-1">
+              <label className="block text-sm font-bold text-forest-700 mb-2">
                 🧒 Student Name
               </label>
               <input
@@ -84,7 +84,7 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-forest-700 mb-1">
+              <label className="block text-sm font-bold text-forest-700 mb-2">
                 📧 Parent/Guardian Email
               </label>
               <input
@@ -99,7 +99,7 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-forest-700 mb-1">
+              <label className="block text-sm font-bold text-forest-700 mb-2">
                 🔑 Create Password
               </label>
               <input
@@ -114,7 +114,7 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-forest-700 mb-1">
+              <label className="block text-sm font-bold text-forest-700 mb-2">
                 🔑 Confirm Password
               </label>
               <input
@@ -132,7 +132,7 @@ export default function SignupPage() {
               id="signup-submit"
               type="submit"
               disabled={isLoading}
-              className="game-btn game-btn-primary w-full text-lg"
+              className="game-btn game-btn-primary w-full text-lg mt-6"
             >
               {isLoading ? (
                 <span className="animate-wiggle inline-block">🦉 Creating...</span>
@@ -143,7 +143,7 @@ export default function SignupPage() {
           </form>
 
           {/* Login link */}
-          <div className="text-center mt-6">
+          <div className="text-center mt-8 pt-6 border-t border-forest-100">
             <p className="text-forest-600 font-semibold">
               Already an explorer?{" "}
               <Link

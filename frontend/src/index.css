@@ -308,6 +308,10 @@ h1, h2, h3, h4 {
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .quiz-option:hover {

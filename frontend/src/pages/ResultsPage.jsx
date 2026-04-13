@@ -121,10 +121,10 @@ export default function ResultsPage() {
   );
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-y-auto">
       <NatureBackground />
 
-      <div className="relative z-10 p-4 max-w-3xl mx-auto flex flex-col items-center justify-center min-h-screen py-12">
+      <div className="relative z-10 w-full max-w-3xl mx-auto py-12">
         {/* Trophy & Celebration */}
         <div className="text-center mb-6 animate-slide-up">
           <div className="text-7xl mb-4 animate-celebrate">🏆</div>
