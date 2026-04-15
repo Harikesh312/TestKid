@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { GameProvider } from "./context/GameContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Navbar from "./components/Navbar";
 
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
@@ -11,11 +12,14 @@ import QuizPage from "./pages/QuizPage";
 import ReadingPage from "./pages/ReadingPage";
 import WritingPage from "./pages/WritingPage";
 import ResultsPage from "./pages/ResultsPage";
+import HistoryPage from "./pages/HistoryPage";
 
 const App = () => {
   return (
     <AuthProvider>
       <GameProvider>
+        {/* Global Navbar — hides itself on login/signup */}
+        <Navbar />
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<LoginPage />} />
@@ -59,6 +63,14 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <ResultsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/history"
+            element={
+              <ProtectedRoute>
+                <HistoryPage />
               </ProtectedRoute>
             }
           />

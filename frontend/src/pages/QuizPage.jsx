@@ -621,7 +621,7 @@ export default function QuizPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative">
+    <div className="min-h-screen flex items-center justify-center p-4 pt-20 relative">
       <NatureBackground />
 
       <div className="relative z-10 w-full max-w-2xl mx-auto">

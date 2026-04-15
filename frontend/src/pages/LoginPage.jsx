@@ -7,6 +7,7 @@ import Mascot from "../components/Mascot";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
@@ -54,7 +55,7 @@ export default function LoginPage() {
         </div>
 
         {/* Card */}
-        <div className="glass-card p-8 animate-pulse-glow">
+        <div className="glass-card p-10 sm:p-12 animate-pulse-glow">
           {/* Title */}
           <div className="text-center mb-6">
             <h1 className="text-3xl text-forest-800 mb-2" style={{ fontFamily: "var(--font-display)" }}>
@@ -96,15 +97,25 @@ export default function LoginPage() {
               <label className="block text-sm font-bold text-forest-700 mb-2">
                 🔑 Password
               </label>
-              <input
-                id="login-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="nature-input"
-                placeholder="Enter your secret password"
-                required
-              />
+              <div className="relative">
+                <input
+                  id="login-password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="nature-input w-full pr-12"
+                  placeholder="Enter your secret password"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-2xl text-forest-500 hover:text-forest-700 focus:outline-none transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? "🙈" : "👁️"}
+                </button>
+              </div>
             </div>
 
             <button

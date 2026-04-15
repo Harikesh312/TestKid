@@ -121,7 +121,7 @@ export default function ResultsPage() {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-y-auto">
+    <div className="min-h-screen flex items-center justify-center p-4 pt-20 relative overflow-y-auto">
       <NatureBackground />
 
       <div className="relative z-10 w-full max-w-3xl mx-auto py-12">

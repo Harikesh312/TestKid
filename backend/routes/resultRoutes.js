@@ -25,7 +25,18 @@ router.post("/", authMiddleware, async (req, res) => {
   }
 });
 
-// Get results for a user
+// Get MY results (logged-in user)
+router.get("/my", authMiddleware, async (req, res) => {
+  try {
+    const results = await Result.find({ userId: req.userId })
+      .sort({ completedAt: -1 });
+    res.json(results);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching results" });
+  }
+});
+
+// Get results for a specific user by ID
 router.get("/:userId", authMiddleware, async (req, res) => {
   try {
     const results = await Result.find({ userId: req.params.userId })

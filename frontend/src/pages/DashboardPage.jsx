@@ -17,24 +17,12 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden pt-16">
       <NatureBackground />
 
-      {/* Header */}
-      <div className="relative z-10 p-4 flex justify-between items-center">
-        <div />
-        <button
-          id="logout-btn"
-          onClick={() => { logout(); navigate("/"); }}
-          className="game-btn text-sm px-4 py-2"
-          style={{ background: "rgba(255,255,255,0.8)", color: "#2d5a2d" }}
-        >
-          🚪 Logout
-        </button>
-      </div>
 
       {/* Main Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center px-4 pb-12" style={{ minHeight: "calc(100vh - 80px)" }}>
+      <div className="relative z-10 flex flex-col items-center justify-center px-4 pb-12" style={{ minHeight: "calc(100vh - 64px)" }}>
         {/* Welcome */}
         <div className="text-center mb-8 animate-slide-up">
           <Mascot mood="cheering" message={`Welcome, ${user?.studentName || "Explorer"}! 🌟`} size="lg" />

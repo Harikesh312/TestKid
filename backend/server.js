@@ -6,13 +6,14 @@ const cookieParser = require("cookie-parser");
 
 const authRoutes = require("./routes/authRoutes");
 const resultRoutes = require("./routes/resultRoutes");
+const transcribeRoutes = require("./routes/transcribeRoutes");
 
 dotenv.config();
 
 const app = express();
 
 // Middleware
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 app.use(
   cors({
@@ -24,6 +25,7 @@ app.use(
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/results", resultRoutes);
+app.use("/api/transcribe", transcribeRoutes);
 
 // Basic route
 app.get("/", (req, res) => {
