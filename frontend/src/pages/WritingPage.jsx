@@ -31,7 +31,7 @@ const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
 export default function WritingPage() {
   const { ageGroup: paramAge } = useParams();
-  const { setWritingScore, quizAccuracy, readingScore, ageGroup } = useGame();
+  const { setWritingScore, quizAccuracy, readingScore, ageGroup, writingDetails, setWritingDetails } = useGame();
   const { user, token } = useAuth();
   const navigate = useNavigate();
 
@@ -125,30 +125,34 @@ Respond with ONLY the extracted text or NO_HANDWRITING. Nothing else.`;
         setExtractedText("");
         setAccuracy(0);
         setWritingScore(0);
+        setWritingDetails({
+          targetSentence,
+          extractedText: "No handwriting detected",
+          accuracy: 0
+        });
         setScanComplete(true);
-        setMascotMood("happy");
+        setMascotMood("cheering");
         setMascotMsg(
-          "That doesn't look like handwriting! Please write the sentence on paper and try again 📝",
+          "Assessment complete! You're doing great! 🌟",
         );
       } else {
         // Got handwritten text — compare it
         setExtractedText(responseText);
         setScanComplete(true);
 
-        const acc = calculateAccuracy(responseText, targetSentence);
+        let acc = calculateAccuracy(responseText, targetSentence);
+        if (acc < 100) acc = 0; // Strict zero marking if not perfectly matched
+        
         setAccuracy(acc);
         setWritingScore(acc);
+        setWritingDetails({
+          targetSentence,
+          extractedText: responseText,
+          accuracy: acc
+        });
 
-        if (acc >= 80) {
-          setMascotMood("cheering");
-          setMascotMsg("Beautiful writing! 🌟");
-        } else if (acc >= 50) {
-          setMascotMood("happy");
-          setMascotMsg("Good effort! Keep practicing! 💪");
-        } else {
-          setMascotMood("happy");
-          setMascotMsg("Nice try! Practice makes perfect! 🌈");
-        }
+        setMascotMood("cheering");
+        setMascotMsg("Assessment complete! You're doing great! 🌟");
       }
     } catch (err) {
       console.error("Gemini OCR error:", err);
@@ -423,49 +427,7 @@ Respond with ONLY the extracted text or NO_HANDWRITING. Nothing else.`;
           {/* Results */}
           {scanComplete && accuracy !== null && (
             <div className="text-center animate-pop-in">
-              {/* Extracted text */}
-              {extractedText && (
-                <div className="mb-4 p-4 bg-white/80 rounded-xl border-2 border-forest-200">
-                  <p className="text-sm font-bold text-forest-600 mb-1">
-                    ✅ AI read from your writing:
-                  </p>
-                  <p className="text-lg text-forest-800 font-semibold">
-                    &ldquo;{extractedText}&rdquo;
-                  </p>
-                </div>
-              )}
-
-              {/* No handwriting detected */}
-              {!extractedText && accuracy === 0 && (
-                <div className="mb-4 p-4 bg-red-50 rounded-xl border-2 border-red-200">
-                  <p className="text-sm font-bold text-red-600">
-                    ❌ No handwriting detected in this image
-                  </p>
-                  <p className="text-xs text-red-500 mt-1">
-                    Please write the sentence on paper with dark ink and upload a clear photo
-                  </p>
-                </div>
-              )}
-
-              <div className="inline-block bg-linear-to-r from-forest-500 to-candy-purple text-white rounded-2xl px-8 py-4 mb-4">
-                <p className="text-sm font-bold opacity-80">
-                  Writing Accuracy
-                </p>
-                <p
-                  className="text-4xl font-bold"
-                  style={{ fontFamily: "var(--font-display)" }}
-                >
-                  {accuracy}%
-                </p>
-              </div>
-
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <button
-                  onClick={handleRetry}
-                  className="game-btn game-btn-secondary text-lg"
-                >
-                  🔄 Try Again
-                </button>
                 <button
                   id="writing-finish-btn"
                   onClick={handleFinish}

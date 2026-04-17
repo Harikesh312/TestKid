@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
 import { useAuth } from "../context/AuthContext";
@@ -9,10 +9,11 @@ import StarRating from "../components/StarRating";
 
 export default function ResultsPage() {
   const { user, logout } = useAuth();
-  const { quizAccuracy, readingScore, writingScore, ageGroup, resetGame } =
+  const { quizAccuracy, readingScore, writingScore, ageGroup, resetGame, quizDetails, readingDetails, writingDetails } =
     useGame();
   const navigate = useNavigate();
   const confettiFired = useRef(false);
+  const [activeDetails, setActiveDetails] = useState(null);
 
   const overallScore = Math.round(
     (quizAccuracy + readingScore + writingScore) / 3,
@@ -79,10 +80,11 @@ export default function ResultsPage() {
     navigate("/");
   };
 
-  const ScoreCard = ({ title, emoji, score, delay }) => (
+  const ScoreCard = ({ title, emoji, score, delay, onClick }) => (
     <div
-      className="glass-card p-6 text-center animate-pop-in"
+      className="glass-card p-6 text-center animate-pop-in cursor-pointer hover:scale-105 transition-transform duration-300 hover:shadow-lg"
       style={{ animationDelay: `${delay}s` }}
+      onClick={onClick}
     >
       <div className="text-3xl mb-2">{emoji}</div>
       <h3
@@ -165,18 +167,21 @@ export default function ResultsPage() {
             emoji="📝"
             score={quizAccuracy}
             delay={0.2}
+            onClick={() => setActiveDetails('quiz')}
           />
           <ScoreCard
             title="Reading"
             emoji="🎤"
             score={readingScore}
             delay={0.4}
+            onClick={() => setActiveDetails('reading')}
           />
           <ScoreCard
             title="Writing"
             emoji="✏️"
             score={writingScore}
             delay={0.6}
+            onClick={() => setActiveDetails('writing')}
           />
         </div>
 
@@ -215,6 +220,89 @@ export default function ResultsPage() {
           </button>
         </div>
       </div>
+
+      {/* Details Modal */}
+      {activeDetails && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in" onClick={() => setActiveDetails(null)}>
+          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-2xl w-full max-h-[85vh] overflow-y-auto animate-slide-up shadow-2xl relative" onClick={e => e.stopPropagation()}>
+            <button className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-800 font-bold transition flex justify-center items-center" onClick={() => setActiveDetails(null)}>✕</button>
+            
+            {activeDetails === "quiz" && (
+              <div>
+                 <h2 className="text-3xl font-bold text-forest-800 mb-6" style={{ fontFamily: "var(--font-display)" }}>📝 Quiz Details</h2>
+                 {quizDetails && quizDetails.length > 0 ? (
+                   <div className="space-y-4">
+                     {quizDetails.map((q, i) => (
+                       <div key={i} className={`p-4 rounded-xl border-2 ${q.isCorrect ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+                         <p className="font-bold text-gray-800 mb-2">Q{i+1}: {q.prompt}</p>
+                         <p className="text-sm"><span className="font-semibold text-gray-600">Your Answer:</span> {q.userAnswer}</p>
+                         {!q.isCorrect && (
+                           <p className="text-sm mt-1"><span className="font-semibold text-gray-600">Correct Answer:</span> <span className="text-forest-700">{q.correctAnswer}</span></p>
+                         )}
+                         <div className="mt-2 text-sm font-bold">
+                           {q.isCorrect ? <span className="text-green-600">✅ Correct</span> : <span className="text-red-600">❌ Incorrect</span>}
+                         </div>
+                       </div>
+                     ))}
+                   </div>
+                 ) : <p className="text-gray-500 italic">No quiz details found. Complete a quiz to view them here.</p>}
+              </div>
+            )}
+
+            {activeDetails === "reading" && (
+              <div>
+                 <h2 className="text-3xl font-bold text-forest-800 mb-6" style={{ fontFamily: "var(--font-display)" }}>🎤 Reading Details</h2>
+                 {readingDetails ? (
+                   <div className="p-5 rounded-xl border-2 border-sky-300 bg-linear-to-br from-sky-50 to-indigo-50 space-y-4">
+                     <div>
+                       <p className="font-bold text-sky-600 text-xs uppercase tracking-wider mb-1">Target Sentence</p>
+                       <p className="text-xl font-semibold text-forest-800">&ldquo;{readingDetails.targetSentence}&rdquo;</p>
+                     </div>
+                     <div>
+                       <p className="font-bold text-indigo-600 text-xs uppercase tracking-wider mb-1">What We Heard</p>
+                       <p className="text-lg text-forest-600 italic">&ldquo;{readingDetails.finalTranscript}&rdquo;</p>
+                     </div>
+                     <div className="pt-4 border-t border-sky-200 mt-2 flex justify-between items-center">
+                       <p className="font-bold text-gray-800 text-lg">Accuracy</p>
+                       <div className="inline-block bg-sky-500 text-white rounded-xl px-4 py-1">
+                         <span className="text-2xl font-bold" style={{ fontFamily: "var(--font-display)" }}>{readingDetails.accuracy}%</span>
+                       </div>
+                     </div>
+                   </div>
+                 ) : <p className="text-gray-500 italic">No reading details found. Read a sentence to view them here.</p>}
+              </div>
+            )}
+
+            {activeDetails === "writing" && (
+              <div>
+                 <h2 className="text-3xl font-bold text-forest-800 mb-6" style={{ fontFamily: "var(--font-display)" }}>✏️ Writing Details</h2>
+                 {writingDetails ? (
+                   <div className="p-5 rounded-xl border-2 border-amber-300 bg-linear-to-br from-amber-50 to-orange-50 space-y-4">
+                     <div>
+                       <p className="font-bold text-amber-600 text-xs uppercase tracking-wider mb-1">Target Sentence</p>
+                       <p className="text-xl font-semibold text-forest-800">&ldquo;{writingDetails.targetSentence}&rdquo;</p>
+                     </div>
+                     <div>
+                       <p className="font-bold text-orange-600 text-xs uppercase tracking-wider mb-1">What We Read</p>
+                       <p className="text-lg text-forest-600 italic">&ldquo;{writingDetails.extractedText}&rdquo;</p>
+                     </div>
+                     <div className="pt-4 border-t border-amber-200 mt-2 flex justify-between items-center">
+                       <p className="font-bold text-gray-800 text-lg">Accuracy</p>
+                       <div className="inline-block bg-amber-500 text-white rounded-xl px-4 py-1">
+                         <span className="text-2xl font-bold" style={{ fontFamily: "var(--font-display)" }}>{writingDetails.accuracy}%</span>
+                       </div>
+                     </div>
+                   </div>
+                 ) : <p className="text-gray-500 italic">No writing details found. Hand-write a sentence to view them here.</p>}
+              </div>
+            )}
+            
+            <div className="mt-8 text-center">
+              <button className="game-btn game-btn-secondary px-8" onClick={() => setActiveDetails(null)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

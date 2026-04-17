@@ -25,7 +25,7 @@ const API_BASE = "http://localhost:5000";
 
 export default function ReadingPage() {
   const { ageGroup: paramAge } = useParams();
-  const { setReadingScore } = useGame();
+  const { setReadingScore, readingDetails, setReadingDetails } = useGame();
   const navigate = useNavigate();
 
   /* ---- pick a random sentence once ---- */
@@ -121,23 +121,25 @@ export default function ReadingPage() {
       if (!transcriptText.trim()) {
         setAccuracy(0);
         setReadingScore(0);
+        setReadingDetails({
+          targetSentence,
+          finalTranscript: "No words detected",
+          accuracy: 0
+        });
         setMascotMood("happy");
-        setMascotMsg("I couldn't hear anything. Try again! 🔄");
+        setMascotMsg("I couldn't hear anything, but that's okay, let's move on! ➡️");
       } else {
         const acc = calculateAccuracy(transcriptText, targetSentence);
         setAccuracy(acc);
         setReadingScore(acc);
+        setReadingDetails({
+          targetSentence,
+          finalTranscript: transcriptText,
+          accuracy: acc
+        });
 
-        if (acc >= 80) {
-          setMascotMood("cheering");
-          setMascotMsg("Amazing reading! 🌟");
-        } else if (acc >= 50) {
-          setMascotMood("happy");
-          setMascotMsg("Good try! Keep practicing! 💪");
-        } else {
-          setMascotMood("happy");
-          setMascotMsg("Don't worry, you're learning! 🌈");
-        }
+        setMascotMood("cheering");
+        setMascotMsg("Assessment complete! You're doing great! 🌟");
       }
     } catch (err) {
       console.error("Transcription error:", err);
@@ -491,44 +493,15 @@ export default function ReadingPage() {
             </div>
           )}
 
-          {/* Final transcript from AssemblyAI */}
-          {finalTranscript && (
-            <div className="mt-6 p-4 bg-white/80 rounded-xl border-2 border-forest-200 animate-pop-in">
-              <p className="text-sm font-bold text-forest-600 mb-1">
-                ✅ AI Transcript:
-              </p>
-              <p className="text-lg text-forest-800 font-semibold">
-                &ldquo;{finalTranscript}&rdquo;
-              </p>
-            </div>
-          )}
-
           {/* Accuracy result */}
           {accuracy !== null && !isProcessing && (
             <div className="mt-4 text-center animate-pop-in">
-              <div className="inline-block bg-linear-to-r from-forest-500 to-sky-500 text-white rounded-2xl px-8 py-4">
-                <p className="text-sm font-bold opacity-80">
-                  Reading Accuracy
-                </p>
-                <p
-                  className="text-4xl font-bold"
-                  style={{ fontFamily: "var(--font-display)" }}
-                >
-                  {accuracy}%
-                </p>
-              </div>
               <div className="mt-4 flex flex-col sm:flex-row gap-3 justify-center">
-                <button
-                  onClick={handleRetry}
-                  className="game-btn game-btn-secondary text-lg"
-                >
-                  🔄 Try Again
-                </button>
                 <button
                   onClick={handleNext}
                   className="game-btn game-btn-primary text-lg"
                 >
-                  ✏️ Go to Writing Test!
+                  ✏️ Continue to Writing Test!
                 </button>
               </div>
             </div>

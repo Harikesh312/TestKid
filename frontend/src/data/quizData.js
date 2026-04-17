@@ -30,7 +30,7 @@ export const grade1Questions = [
     id: 4,
     type: "arrange-letters",
     prompt: "Arrange the letters to form the words shown in the picture:",
-    hint: "🦆 A small yellow duck!",
+    hint: "🦆 A little yellow duck!",
     scrambledGroups: [
       { letters: ["L", "T", "I", "L", "T", "E"], answer: "LITTLE" },
       { letters: ["Y", "L", "O", "E", "L", "W"], answer: "YELLOW" },

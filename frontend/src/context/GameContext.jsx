@@ -9,12 +9,19 @@ export function GameProvider({ children }) {
   const [readingScore, setReadingScore] = useState(0);
   const [writingScore, setWritingScore] = useState(0);
 
+  const [quizDetails, setQuizDetails] = useState([]);
+  const [readingDetails, setReadingDetails] = useState(null);
+  const [writingDetails, setWritingDetails] = useState(null);
+
   const resetGame = () => {
     setAgeGroup(null);
     setQuizScore(0);
     setQuizTotal(0);
     setReadingScore(0);
     setWritingScore(0);
+    setQuizDetails([]);
+    setReadingDetails(null);
+    setWritingDetails(null);
   };
 
   const quizAccuracy = quizTotal > 0 ? Math.round((quizScore / quizTotal) * 100) : 0;
@@ -32,6 +39,12 @@ export function GameProvider({ children }) {
         setReadingScore,
         writingScore,
         setWritingScore,
+        quizDetails,
+        setQuizDetails,
+        readingDetails,
+        setReadingDetails,
+        writingDetails,
+        setWritingDetails,
         quizAccuracy,
         resetGame,
       }}
