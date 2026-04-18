@@ -4,6 +4,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { useGame } from "../context/GameContext";
 import { useAuth } from "../context/AuthContext";
 import { calculateAccuracy } from "../utils/accuracyUtils";
+import { API_BASE_URL } from "../apiConfig";
 import NatureBackground from "../components/NatureBackground";
 import Mascot from "../components/Mascot";
 
@@ -23,7 +24,7 @@ const WRITING_SENTENCES = [
   "Birds fly high in the blue sky.",
 ];
 
-const API_BASE = "http://localhost:5000";
+const API_BASE = API_BASE_URL;
 
 /* ---- Gemini setup ---- */
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);

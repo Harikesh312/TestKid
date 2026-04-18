@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { API_BASE_URL } from "../apiConfig";
 import NatureBackground from "../components/NatureBackground";
 import Mascot from "../components/Mascot";
 
-const API_BASE = "http://localhost:5000";
+const API_BASE = API_BASE_URL;
 
 function ScoreBadge({ score, label }) {
   const color =

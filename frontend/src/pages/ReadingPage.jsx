@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useGame } from "../context/GameContext";
 import { calculateAccuracy } from "../utils/accuracyUtils";
+import { API_BASE_URL } from "../apiConfig";
 import NatureBackground from "../components/NatureBackground";
 import Mascot from "../components/Mascot";
 
@@ -21,7 +22,7 @@ const READING_SENTENCES = [
   "The stars twinkle in the dark sky.",
 ];
 
-const API_BASE = "http://localhost:5000";
+const API_BASE = API_BASE_URL;
 
 export default function ReadingPage() {
   const { ageGroup: paramAge } = useParams();
