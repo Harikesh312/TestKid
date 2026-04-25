@@ -7,6 +7,7 @@ const cookieParser = require("cookie-parser");
 const authRoutes = require("./routes/authRoutes");
 const resultRoutes = require("./routes/resultRoutes");
 const transcribeRoutes = require("./routes/transcribeRoutes");
+const consentRoutes = require("./routes/consentRoutes");
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ app.use(
 app.use("/api/auth", authRoutes);
 app.use("/api/results", resultRoutes);
 app.use("/api/transcribe", transcribeRoutes);
+app.use("/api/consent", consentRoutes);
 
 // Basic route
 app.get("/", (req, res) => {

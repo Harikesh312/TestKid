@@ -25,8 +25,8 @@ export default function Navbar() {
     navigate("/");
   };
 
-  // Don't show on login/signup pages
-  const hideOn = ["/", "/signup"];
+  // Don't show on onboarding / auth pages
+  const hideOn = ["/", "/welcome", "/consent", "/auth-choice", "/login", "/signup"];
   if (hideOn.includes(location.pathname)) return null;
 
   // Get initials for avatar

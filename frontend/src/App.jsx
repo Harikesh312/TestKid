@@ -5,9 +5,13 @@ import { GameProvider } from "./context/GameContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from "./components/Navbar";
 
+import WelcomePage from "./pages/WelcomePage";
+import ConsentPage from "./pages/ConsentPage";
+import AuthChoicePage from "./pages/AuthChoicePage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import DashboardPage from "./pages/DashboardPage";
+import ObserverQuestionsPage from "./pages/ObserverQuestionsPage";
 import QuizPage from "./pages/QuizPage";
 import ReadingPage from "./pages/ReadingPage";
 import WritingPage from "./pages/WritingPage";
@@ -21,11 +25,25 @@ const App = () => {
         {/* Global Navbar — hides itself on login/signup */}
         <Navbar />
         <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<LoginPage />} />
+          {/* Onboarding flow: Welcome → Consent → Auth Choice */}
+          <Route path="/" element={<Navigate to="/welcome" replace />} />
+          <Route path="/welcome" element={<WelcomePage />} />
+          <Route path="/consent" element={<ConsentPage />} />
+          <Route path="/auth-choice" element={<AuthChoicePage />} />
+
+          {/* Public auth routes */}
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
 
           {/* Protected routes */}
+          <Route
+            path="/observer-questions"
+            element={
+              <ProtectedRoute>
+                <ObserverQuestionsPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/dashboard"
             element={
@@ -76,7 +94,7 @@ const App = () => {
           />
 
           {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/welcome" replace />} />
         </Routes>
       </GameProvider>
     </AuthProvider>

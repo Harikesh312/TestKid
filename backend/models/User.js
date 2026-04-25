@@ -18,6 +18,27 @@ const userSchema = new mongoose.Schema({
     required: [true, "Password is required"],
     minlength: 6,
   },
+  // Child demographics
+  childAge: {
+    type: Number,
+    min: 3,
+    max: 18,
+    default: null,
+  },
+  grade: {
+    type: String,
+    trim: true,
+    default: null,
+  },
+  schoolType: {
+    type: String,
+    enum: ["government", "private", "home_school", "other", null],
+    default: null,
+  },
+  observerQuestions: {
+    type: [Number],
+    default: [],
+  },
   createdAt: {
     type: Date,
     default: Date.now,

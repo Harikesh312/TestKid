@@ -9,7 +9,7 @@ const router = express.Router();
 // Sign Up
 router.post("/signup", async (req, res) => {
   try {
-    const { studentName, email, password } = req.body;
+    const { studentName, email, password, childAge, grade, schoolType } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -26,6 +26,9 @@ router.post("/signup", async (req, res) => {
       studentName,
       email,
       password: hashedPassword,
+      childAge,
+      grade,
+      schoolType
     });
 
     await user.save();
@@ -98,6 +101,23 @@ router.get("/me", authMiddleware, async (req, res) => {
       email: user.email,
     });
   } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Save observer questions
+router.put("/observer-questions", authMiddleware, async (req, res) => {
+  try {
+    const { answers } = req.body;
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    user.observerQuestions = answers;
+    await user.save();
+    res.json({ message: "Observer questions saved successfully" });
+  } catch (error) {
+    console.error("Save observer questions error:", error);
     res.status(500).json({ message: "Server error" });
   }
 });

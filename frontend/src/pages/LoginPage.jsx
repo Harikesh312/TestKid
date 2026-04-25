@@ -143,6 +143,15 @@ export default function LoginPage() {
                 Join the Adventure! 🌈
               </Link>
             </p>
+            <p className="mt-2">
+              <Link
+                to="/auth-choice"
+                className="text-forest-500 hover:text-forest-700 font-semibold text-sm transition-colors"
+                style={{ textDecoration: "none" }}
+              >
+                ← Back to options
+              </Link>
+            </p>
           </div>
         </div>
 
