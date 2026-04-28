@@ -23,7 +23,7 @@ export default function AuthChoicePage() {
       <NatureBackground />
 
       <div
-        className={`w-full max-w-md relative transition-all duration-700 ${
+        className={`w-full max-w-lg relative transition-all duration-700 ${
           showContent
             ? "opacity-100 translate-y-0"
             : "opacity-0 translate-y-8"
@@ -90,25 +90,26 @@ export default function AuthChoicePage() {
             </span>
           </div>
 
-          {/* Login button */}
-          <Link to="/login" style={{ textDecoration: "none" }}>
-            <button
-              id="auth-login-btn"
-              className="game-btn game-btn-primary w-full text-lg mb-4"
-            >
-              🚪 Log In
-            </button>
-          </Link>
+          {/* Action buttons */}
+          <div className="flex flex-col gap-4">
+            <Link to="/login" style={{ textDecoration: "none" }}>
+              <button
+                id="auth-login-btn"
+                className="game-btn game-btn-primary w-full text-xl py-3"
+              >
+                🚪 Log In
+              </button>
+            </Link>
 
-          {/* Signup button */}
-          <Link to="/signup" style={{ textDecoration: "none" }}>
-            <button
-              id="auth-signup-btn"
-              className="game-btn game-btn-secondary w-full text-lg"
-            >
-              🌟 Sign Up — New Explorer
-            </button>
-          </Link>
+            <Link to="/signup" style={{ textDecoration: "none" }}>
+              <button
+                id="auth-signup-btn"
+                className="game-btn game-btn-secondary w-full text-xl py-3"
+              >
+                🌟 Sign Up — New Explorer
+              </button>
+            </Link>
+          </div>
 
           {/* Divider */}
           <div className="flex items-center gap-3 my-6">

@@ -3,47 +3,43 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useGame } from "../context/GameContext";
 import { calculateAccuracy } from "../utils/accuracyUtils";
 import { API_BASE_URL } from "../apiConfig";
+import { grade1Reading, grade2Reading } from "../data/readingData";
 import NatureBackground from "../components/NatureBackground";
 import Mascot from "../components/Mascot";
-
-/* ------------------------------------------------------------------ */
-/*  10 curated reading sentences                                      */
-/* ------------------------------------------------------------------ */
-const READING_SENTENCES = [
-  "The happy sun is big and yellow.",
-  "I can see a blue bird in the tree.",
-  "My dog likes to run and jump.",
-  "The cat is sleeping on the red mat.",
-  "I have five fingers on my hand.",
-  "The water in the lake is very cold.",
-  "Green grass grows in the garden.",
-  "We go to school every morning.",
-  "An apple a day is good for health.",
-  "The stars twinkle in the dark sky.",
-];
+import ProgressBar from "../components/ProgressBar";
 
 const API_BASE = API_BASE_URL;
 
 export default function ReadingPage() {
   const { ageGroup: paramAge } = useParams();
-  const { setReadingScore, readingDetails, setReadingDetails } = useGame();
+  const {
+    setReadingScore,
+    setReadingDetails,
+    readingFollowUpDetails,
+    setReadingFollowUpDetails,
+  } = useGame();
   const navigate = useNavigate();
 
-  /* ---- pick a random sentence once ---- */
-  const [targetSentence] = useState(
-    () =>
-      READING_SENTENCES[Math.floor(Math.random() * READING_SENTENCES.length)],
-  );
+  // Pick the right data for the age group
+  const readingData = paramAge === "5-8" ? grade1Reading : grade2Reading;
+  const targetSentence = readingData.passage;
+  const followUpQuestions = readingData.followUpQuestions;
 
-  /* ---- state ---- */
+  /* ---- phase: "reading" | "followup" ---- */
+  const [phase, setPhase] = useState("reading");
+  const [followUpIdx, setFollowUpIdx] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+
+  /* ---- recording state ---- */
   const [isRecording, setIsRecording] = useState(false);
+  const [hasStopped, setHasStopped] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [liveText, setLiveText] = useState("");
   const [finalTranscript, setFinalTranscript] = useState("");
   const [accuracy, setAccuracy] = useState(null);
   const [error, setError] = useState("");
   const [mascotMood, setMascotMood] = useState("happy");
-  const [mascotMsg, setMascotMsg] = useState("Read the sentence out loud! 📖");
+  const [mascotMsg, setMascotMsg] = useState("Read the passage out loud! 📖");
   const [micPermission, setMicPermission] = useState("prompt");
 
   // Refs
@@ -64,17 +60,15 @@ export default function ReadingPage() {
       .catch(() => {});
   }, []);
 
-
-
-  /* ---- the actual stop logic (extracted so auto-stop & manual stop share it) ---- */
-  const doStop = useCallback(async () => {
+  /* ---- the actual stop logic ---- */
+  const doStop = useCallback(() => {
     if (stopCalledRef.current) return;
     stopCalledRef.current = true;
 
     setIsRecording(false);
-    setIsProcessing(true);
+    setHasStopped(true);
     setMascotMood("thinking");
-    setMascotMsg("Analyzing your reading with AI… 🔍");
+    setMascotMsg("Click Next to see some questions! 🧠");
 
     // Stop Web Speech API
     if (recognitionRef.current) {
@@ -84,73 +78,70 @@ export default function ReadingPage() {
       recognitionRef.current = null;
     }
 
-    // Wait for MediaRecorder to finish
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-      await new Promise((resolve) => {
-        mediaRecorderRef.current.onstop = () => resolve();
-        mediaRecorderRef.current.stop();
-      });
-    }
-
-    // Stop mic tracks
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
-    }
-
-    const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-    const formData = new FormData();
-    formData.append("audio", blob, "recording.webm");
-
-    try {
-      const res = await fetch(`${API_BASE}/api/transcribe`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(
-          errData.error || errData.message || "Transcription failed",
-        );
+    // Process in background
+    (async () => {
+      // Wait for MediaRecorder to finish
+      if (
+        mediaRecorderRef.current &&
+        mediaRecorderRef.current.state !== "inactive"
+      ) {
+        await new Promise((resolve) => {
+          mediaRecorderRef.current.onstop = () => resolve();
+          mediaRecorderRef.current.stop();
+        });
       }
 
-      const data = await res.json();
-      const transcriptText = data.text || "";
-      setFinalTranscript(transcriptText);
+      // Stop mic tracks
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+      }
 
-      if (!transcriptText.trim()) {
+      const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+      const formData = new FormData();
+      formData.append("audio", blob, "recording.webm");
+
+      try {
+        const res = await fetch(`${API_BASE}/api/transcribe`, {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          throw new Error("Transcription failed");
+        }
+
+        const data = await res.json();
+        const transcriptText = data.text || "";
+        setFinalTranscript(transcriptText);
+
+        if (!transcriptText.trim()) {
+          setAccuracy(0);
+          setReadingDetails({
+            targetSentence,
+            finalTranscript: "No words detected",
+            accuracy: 0,
+          });
+        } else {
+          const acc = calculateAccuracy(transcriptText, targetSentence);
+          setAccuracy(acc);
+          setReadingDetails({
+            targetSentence,
+            finalTranscript: transcriptText,
+            accuracy: acc,
+          });
+        }
+      } catch (err) {
+        console.error("Transcription error:", err);
         setAccuracy(0);
-        setReadingScore(0);
         setReadingDetails({
           targetSentence,
-          finalTranscript: "No words detected",
-          accuracy: 0
+          finalTranscript: "Failed to process audio",
+          accuracy: 0,
         });
-        setMascotMood("happy");
-        setMascotMsg("I couldn't hear anything, but that's okay, let's move on! ➡️");
-      } else {
-        const acc = calculateAccuracy(transcriptText, targetSentence);
-        setAccuracy(acc);
-        setReadingScore(acc);
-        setReadingDetails({
-          targetSentence,
-          finalTranscript: transcriptText,
-          accuracy: acc
-        });
-
-        setMascotMood("cheering");
-        setMascotMsg("Assessment complete! You're doing great! 🌟");
       }
-    } catch (err) {
-      console.error("Transcription error:", err);
-      setError(`Something went wrong: ${err.message}. Try again!`);
-      setMascotMood("happy");
-      setMascotMsg("Oops! Let's try again 🔄");
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [targetSentence, setReadingScore]);
+    })();
+  }, [targetSentence, setReadingDetails]);
 
   /* ---- start recording ---- */
   const startRecording = useCallback(async () => {
@@ -162,7 +153,7 @@ export default function ReadingPage() {
       setMicPermission("granted");
       streamRef.current = stream;
 
-      // ===== 1) MediaRecorder for AssemblyAI =====
+      // MediaRecorder for AssemblyAI
       const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
         ? "audio/webm;codecs=opus"
         : "audio/webm";
@@ -175,7 +166,7 @@ export default function ReadingPage() {
       recorder.start();
       mediaRecorderRef.current = recorder;
 
-      // ===== 2) Web Speech API for live text =====
+      // Web Speech API for live text
       const SpeechRecognition =
         window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -206,9 +197,7 @@ export default function ReadingPage() {
           console.warn("SpeechRecognition error:", e.error);
         };
 
-        // If Web Speech API ends on its own, don't crash
         recognition.onend = () => {
-          // If still supposed to be recording, restart it
           if (!stopCalledRef.current) {
             try {
               recognition.start();
@@ -221,6 +210,7 @@ export default function ReadingPage() {
       }
 
       setIsRecording(true);
+      setHasStopped(false);
       setLiveText("");
       setFinalTranscript("");
       setAccuracy(null);
@@ -230,7 +220,7 @@ export default function ReadingPage() {
       console.error("Mic error:", err);
       setMicPermission("denied");
       setError(
-        "Microphone access was denied. Please allow microphone permission in your browser settings.",
+        "Microphone access was denied. Please allow microphone permission in your browser settings."
       );
       setMascotMood("happy");
       setMascotMsg("I need your microphone! 🎙️");
@@ -248,21 +238,54 @@ export default function ReadingPage() {
     setFinalTranscript("");
     setAccuracy(null);
     setError("");
+    setHasStopped(false);
     setMascotMood("happy");
-    setMascotMsg("Read the sentence out loud! 📖");
+    setMascotMsg("Read the passage out loud! 📖");
     stopCalledRef.current = false;
   };
 
-  /* ---- next phase ---- */
-  const handleNext = () => {
-    navigate(`/writing/${paramAge}`);
+
+
+  const handleFollowUpNext = () => {
+    const q = followUpQuestions[followUpIdx];
+    const isCorrect = selectedAnswer === q.answer;
+
+    const newDetails = [
+      ...readingFollowUpDetails,
+      {
+        prompt: q.prompt,
+        userAnswer: selectedAnswer,
+        correctAnswer: q.answer,
+        isCorrect,
+      },
+    ];
+    setReadingFollowUpDetails(newDetails);
+
+    if (followUpIdx < followUpQuestions.length - 1) {
+      setFollowUpIdx((i) => i + 1);
+      setSelectedAnswer(null);
+      setMascotMood("thinking");
+      setMascotMsg("Next question! 💪");
+    } else {
+      // Calculate score based on follow-up questions
+      const correctCount = newDetails.filter((d) => d.isCorrect).length;
+      const finalScore = Math.round((correctCount / followUpQuestions.length) * 100);
+      setReadingScore(finalScore);
+
+      // All follow-up done, go to writing
+      setMascotMood("cheering");
+      setMascotMsg("Awesome! On to the writing test! ✨");
+      navigate(`/writing/${paramAge}`);
+    }
   };
 
   /* ---- cleanup on unmount ---- */
   useEffect(() => {
     return () => {
       if (recognitionRef.current) {
-        try { recognitionRef.current.stop(); } catch (_) {}
+        try {
+          recognitionRef.current.stop();
+        } catch (_) {}
       }
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((t) => t.stop());
@@ -270,11 +293,110 @@ export default function ReadingPage() {
     };
   }, []);
 
-  return (
-    <div className="min-h-screen flex items-center justify-center p-4 pt-20 relative">
-      <NatureBackground />
+  /* ============ FOLLOW-UP PHASE ============ */
+  if (phase === "followup") {
+    const currentQ = followUpQuestions[followUpIdx];
+    return (
+      <div className="min-h-screen w-full flex flex-col pt-16 pb-8 overflow-y-scroll overflow-x-hidden relative">
+        <NatureBackground />
+        <div className="flex-1 flex flex-col justify-center items-center w-full p-4">
+          <div className="relative z-10 w-full max-w-3xl py-8">
+          <div className="text-center mb-6 animate-slide-up">
+            <span
+              className="text-sm font-bold text-white drop-shadow inline-block mb-2"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              🎤 Phase 2: Reading — Follow-Up Questions
+            </span>
+          </div>
 
-      <div className="relative z-10 w-full max-w-2xl mx-auto py-8">
+          <div className="mb-6">
+            <ProgressBar
+              current={followUpIdx + 1}
+              total={followUpQuestions.length}
+              label="Follow-Up Progress"
+            />
+          </div>
+
+          {/* Show the passage for reference */}
+          <div className="glass-card p-4 mb-4 animate-pop-in">
+            <p className="text-xs font-bold text-forest-600 uppercase tracking-wider mb-1">
+              📖 Passage (for reference):
+            </p>
+            <p
+              className="text-sm text-forest-800 italic leading-relaxed"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              &ldquo;{targetSentence}&rdquo;
+            </p>
+          </div>
+
+          <div
+            className="glass-card p-8 md:p-10 animate-slide-up flex flex-col items-center"
+            key={`fq-${followUpIdx}`}
+          >
+            <div className="flex flex-col items-center text-center gap-4 mb-8 w-full">
+              <span
+                className="bg-forest-500 text-white rounded-full w-14 h-14 flex items-center justify-center font-bold text-2xl shadow-lg animate-bounce-gentle shrink-0"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                {followUpIdx + 1}
+              </span>
+              <h2
+                className="text-2xl md:text-3xl text-forest-800 font-bold leading-tight"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                {currentQ.prompt}
+              </h2>
+            </div>
+
+            <div className="flex flex-col gap-3 w-full max-w-md mx-auto mb-8">
+              {currentQ.options.map((opt, idx) => (
+                <button
+                  key={opt}
+                  onClick={() => setSelectedAnswer(opt)}
+                  className={`quiz-option text-lg text-left px-6 py-4 flex items-center gap-3 ${
+                    selectedAnswer === opt ? "selected" : ""
+                  }`}
+                >
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-forest-100 text-forest-700 font-bold text-sm shrink-0">
+                    {String.fromCharCode(65 + idx)}
+                  </span>
+                  <span>{opt}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="flex justify-center gap-4 pt-6 border-t border-forest-100 w-full">
+              <button
+                onClick={handleFollowUpNext}
+                disabled={selectedAnswer === null}
+                className={`game-btn game-btn-primary ${
+                  selectedAnswer === null ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                {followUpIdx < followUpQuestions.length - 1
+                  ? "➡️ Next Question"
+                  : "✏️ Go to Writing Test!"}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex justify-center mt-4">
+            <Mascot mood={mascotMood} message={mascotMsg} size="sm" />
+          </div>
+        </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ============ READING PHASE ============ */
+  return (
+    <div className="min-h-screen w-full flex flex-col pt-16 pb-8 overflow-y-scroll overflow-x-hidden relative">
+      <NatureBackground />
+      <div className="flex-1 flex flex-col justify-center items-center w-full p-4">
+        <div className="relative z-10 w-full max-w-4xl py-8">
         {/* Header */}
         <div className="text-center mb-6 animate-slide-up">
           <span
@@ -296,7 +418,7 @@ export default function ReadingPage() {
 
         {/* Billboard Card */}
         <div className="glass-card p-8 w-full mb-6 animate-pop-in">
-          {/* Sentence billboard */}
+          {/* Passage billboard */}
           <div
             className="bg-linear-to-br from-amber-100 to-amber-50 rounded-2xl p-8 border-4 border-amber-400 shadow-inner mb-6 text-center"
             style={{
@@ -304,6 +426,9 @@ export default function ReadingPage() {
                 "inset 0 4px 20px rgba(0,0,0,0.08), 0 8px 30px rgba(0,0,0,0.1)",
             }}
           >
+            <p className="text-xs text-amber-600 font-bold uppercase tracking-wider mb-3">
+              📖 Read this passage:
+            </p>
             <p
               className="text-2xl md:text-3xl text-amber-900 font-bold leading-relaxed"
               style={{ fontFamily: "var(--font-display)" }}
@@ -335,106 +460,10 @@ export default function ReadingPage() {
                   </span>
                 )}
               </p>
-
             </div>
           )}
 
-          {/* ===== AI PROCESSING OVERLAY ===== */}
-          {isProcessing && (
-            <div className="mb-6 animate-pop-in">
-              <div className="bg-linear-to-br from-sky-50 to-indigo-50 rounded-2xl p-10 border-2 border-sky-200 text-center">
-                {/* Rotating spinner */}
-                <div className="flex justify-center mb-6">
-                  <div className="relative w-28 h-28">
-                    {/* Outer rotating ring */}
-                    <div
-                      className="absolute inset-0 rounded-full border-4 border-transparent"
-                      style={{
-                        borderTopColor: "#38bdf8",
-                        borderRightColor: "#818cf8",
-                        animation: "ai-spin 1s linear infinite",
-                      }}
-                    />
-                    {/* Middle rotating ring (opposite direction) */}
-                    <div
-                      className="absolute inset-2 rounded-full border-4 border-transparent"
-                      style={{
-                        borderBottomColor: "#a78bfa",
-                        borderLeftColor: "#f472b6",
-                        animation: "ai-spin 1.5s linear infinite reverse",
-                      }}
-                    />
-                    {/* Inner rotating ring */}
-                    <div
-                      className="absolute inset-4 rounded-full border-4 border-transparent"
-                      style={{
-                        borderTopColor: "#34d399",
-                        borderRightColor: "#fbbf24",
-                        animation: "ai-spin 2s linear infinite",
-                      }}
-                    />
-                    {/* Center icon */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div
-                        className="text-4xl"
-                        style={{ animation: "ai-pulse 2s ease-in-out infinite" }}
-                      >
-                        🤖
-                      </div>
-                    </div>
-                    {/* Pulsing glow behind */}
-                    <div
-                      className="absolute inset-0 rounded-full"
-                      style={{
-                        background: "radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%)",
-                        animation: "ai-pulse 2s ease-in-out infinite",
-                      }}
-                    />
-                  </div>
-                </div>
 
-                <h3
-                  className="text-xl font-bold text-sky-800 mb-2"
-                  style={{ fontFamily: "var(--font-display)" }}
-                >
-                  AI is Analyzing…
-                </h3>
-                <p className="text-sm text-sky-600 font-semibold mb-4">
-                  Our smart owl is carefully checking your reading!
-                </p>
-
-                {/* Animated dots */}
-                <div className="flex justify-center gap-2 mb-4">
-                  {[0, 1, 2, 3, 4].map((i) => (
-                    <div
-                      key={i}
-                      className="w-3 h-3 rounded-full"
-                      style={{
-                        background: ["#38bdf8", "#818cf8", "#a78bfa", "#f472b6", "#34d399"][i],
-                        animationName: "ai-bounce",
-                        animationDuration: "1.4s",
-                        animationTimingFunction: "ease-in-out",
-                        animationIterationCount: "infinite",
-                        animationDelay: `${i * 0.15}s`,
-                      }}
-                    />
-                  ))}
-                </div>
-
-                {/* What we heard preview */}
-                {liveText && (
-                  <div className="mt-2 p-3 bg-white/60 rounded-lg">
-                    <p className="text-xs text-gray-500 font-bold mb-1">
-                      You said:
-                    </p>
-                    <p className="text-sm text-forest-700 font-semibold">
-                      &ldquo;{liveText}&rdquo;
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
 
           {/* Microphone area */}
           {!isProcessing && (
@@ -446,34 +475,53 @@ export default function ReadingPage() {
                 </div>
               )}
 
-              {/* Record / Stop button */}
-              <button
-                id="reading-record-btn"
-                onClick={isRecording ? stopRecording : startRecording}
-                disabled={accuracy !== null}
-                className={`w-24 h-24 rounded-full flex items-center justify-center text-4xl transition-all duration-300 ${
-                  isRecording
-                    ? "bg-red-500 text-white animate-mic-pulse shadow-lg shadow-red-300"
-                    : accuracy !== null
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+              {/* Record / Stop button or Next Button */}
+              {hasStopped ? (
+                <div className="flex flex-col sm:flex-row gap-4 mt-2 animate-pop-in">
+                  <button
+                    onClick={handleRetry}
+                    className="game-btn game-btn-secondary text-lg px-6 py-3"
+                  >
+                    🔄 Read Again
+                  </button>
+                  <button
+                    onClick={() => {
+                      setPhase("followup");
+                      setFollowUpIdx(0);
+                      setSelectedAnswer(null);
+                    }}
+                    className="game-btn game-btn-primary text-xl px-8 py-3"
+                  >
+                    ➡️ Next
+                  </button>
+                </div>
+              ) : (
+                <button
+                  id="reading-record-btn"
+                  onClick={isRecording ? stopRecording : startRecording}
+                  disabled={accuracy !== null}
+                  className={`w-24 h-24 rounded-full flex items-center justify-center text-4xl transition-all duration-300 ${
+                    isRecording
+                      ? "bg-red-500 text-white animate-mic-pulse shadow-lg shadow-red-300"
                       : "bg-linear-to-br from-forest-500 to-forest-700 text-white hover:scale-110 shadow-lg"
-                }`}
-              >
-                {isRecording ? "⏹️" : "🎙️"}
-              </button>
+                  }`}
+                >
+                  {isRecording ? "⏹️" : "🎙️"}
+                </button>
+              )}
 
               <p className="text-sm font-bold text-forest-700">
-                {isRecording
+                {hasStopped
+                  ? "Great job! Click Next to continue."
+                  : isRecording
                   ? "🔴 Listening… Click to stop or stay silent to auto-stop"
-                  : accuracy !== null
-                    ? "Recording complete!"
-                    : micPermission === "denied"
-                      ? "⚠️ Microphone blocked – check browser settings"
-                      : "Tap the microphone to start reading"}
+                  : micPermission === "denied"
+                  ? "⚠️ Microphone blocked – check browser settings"
+                  : "Tap the microphone to start reading"}
               </p>
 
               {/* Waveform animation */}
-              {isRecording && (
+              {isRecording && !hasStopped && (
                 <div className="flex items-end gap-1 h-8">
                   {[...Array(12)].map((_, i) => (
                     <div
@@ -494,24 +542,13 @@ export default function ReadingPage() {
             </div>
           )}
 
-          {/* Accuracy result */}
-          {accuracy !== null && !isProcessing && (
-            <div className="mt-4 text-center animate-pop-in">
-              <div className="mt-4 flex flex-col sm:flex-row gap-3 justify-center">
-                <button
-                  onClick={handleNext}
-                  className="game-btn game-btn-primary text-lg"
-                >
-                  ✏️ Continue to Writing Test!
-                </button>
-              </div>
-            </div>
-          )}
+
         </div>
 
         {/* Mascot */}
         <div className="animate-slide-up">
           <Mascot mood={mascotMood} message={mascotMsg} size="md" />
+        </div>
         </div>
       </div>
 

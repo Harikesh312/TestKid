@@ -9,15 +9,37 @@ import StarRating from "../components/StarRating";
 
 export default function ResultsPage() {
   const { user, logout } = useAuth();
-  const { quizAccuracy, readingScore, writingScore, ageGroup, resetGame, quizDetails, readingDetails, writingDetails } =
+  const { quizAccuracy, readingScore, writingScore, ageGroup, resetGame, quizDetails, readingDetails, writingDetails, readingFollowUpDetails, writingFollowUpDetails } =
     useGame();
   const navigate = useNavigate();
   const confettiFired = useRef(false);
   const [activeDetails, setActiveDetails] = useState(null);
 
-  const overallScore = Math.round(
-    (quizAccuracy + readingScore + writingScore) / 3,
-  );
+  // Calculate risks (0.0 to 1.0) where 1.0 is max difficulty/risk
+  const observerSum = (user?.observerQuestions || []).reduce((a, b) => a + b, 0);
+  const observerRisk = observerSum / 20; // 10 questions max 2 each = 20
+  const mcqRisk = 1.0 - (quizAccuracy / 100);
+  const readingRisk = 1.0 - (readingScore / 100);
+  const writingRisk = 1.0 - (writingScore / 100);
+
+  const finalRiskScore = (0.4 * observerRisk) + (0.2 * mcqRisk) + (0.2 * readingRisk) + (0.2 * writingRisk);
+
+  let riskClassification = "";
+  let riskColor = "";
+  let riskMessage = "";
+  if (finalRiskScore <= 0.3) {
+    riskClassification = "No Difficulty";
+    riskColor = "from-green-500 to-emerald-600";
+    riskMessage = "🌟 Doing Great! Keep it up!";
+  } else if (finalRiskScore <= 0.6) {
+    riskClassification = "At Risk";
+    riskColor = "from-amber-400 to-orange-500";
+    riskMessage = "💪 Good effort! Let's practice a bit more.";
+  } else {
+    riskClassification = "High Risk";
+    riskColor = "from-rose-500 to-red-600";
+    riskMessage = "🤝 We'll help you improve step by step!";
+  }
 
   useEffect(() => {
     if (!confettiFired.current) {
@@ -50,24 +72,7 @@ export default function ResultsPage() {
     }
   }, []);
 
-  const getMessage = () => {
-    if (overallScore >= 90)
-      return {
-        text: "🌟 You're a Superstar!",
-        color: "from-sun-400 to-candy-orange",
-      };
-    if (overallScore >= 70)
-      return {
-        text: "🎉 Great Job, Explorer!",
-        color: "from-forest-500 to-sky-500",
-      };
-    return {
-      text: "💪 Keep Practicing, You're Getting Better!",
-      color: "from-candy-purple to-candy-pink",
-    };
-  };
 
-  const msg = getMessage();
 
   const handlePlayAgain = () => {
     resetGame();
@@ -123,13 +128,13 @@ export default function ResultsPage() {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 pt-20 relative overflow-y-auto">
+    <div className="min-h-screen w-full flex flex-col pt-16 pb-8 overflow-y-scroll overflow-x-hidden relative">
       <NatureBackground />
-
-      <div className="relative z-10 w-full max-w-3xl mx-auto py-12">
+      <div className="flex-1 flex flex-col justify-center items-center w-full p-4">
+        <div className="relative z-10 w-full max-w-4xl py-8">
         {/* Trophy & Celebration */}
-        <div className="text-center mb-6 animate-slide-up">
-          <div className="text-7xl mb-4 animate-celebrate">🏆</div>
+        <div className="text-center mb-10 animate-slide-up">
+          <div className="text-8xl mb-6 animate-celebrate leading-none mt-4">🏆</div>
           <h1
             className="text-4xl md:text-5xl text-white drop-shadow-lg mb-2"
             style={{
@@ -144,24 +149,26 @@ export default function ResultsPage() {
           </p>
         </div>
 
-        {/* Overall message */}
+        {/* Overall message & Classification */}
         <div
-          className={`bg-linear-to-r ${msg.color} text-white rounded-2xl px-8 py-4 mb-8 animate-pop-in text-center shadow-xl`}
+          className={`bg-linear-to-r ${riskColor} text-white rounded-3xl px-10 py-6 mb-12 animate-pop-in text-center shadow-xl max-w-2xl mx-auto`}
         >
           <p
             className="text-2xl font-bold"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            {msg.text}
+            {riskMessage}
           </p>
           <p className="text-lg opacity-90 mt-1">
-            Overall Score:{" "}
-            <span className="text-3xl font-bold">{overallScore}%</span>
+            Classification: <span className="text-2xl font-bold">{riskClassification}</span>
+          </p>
+          <p className="text-sm opacity-80 mt-1">
+            Score: {finalRiskScore.toFixed(2)}
           </p>
         </div>
 
         {/* Score Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full mb-12">
           <ScoreCard
             title="Q&A Quiz"
             emoji="📝"
@@ -200,21 +207,21 @@ export default function ResultsPage() {
         </div>
 
         {/* Mascot */}
-        <div className="mb-6">
+        <div className="mb-10">
           <Mascot mood="cheering" message="I'm so proud of you! 🎊" size="lg" />
         </div>
 
         {/* Action buttons */}
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col sm:flex-row gap-6 justify-center">
           <button
             onClick={handlePlayAgain}
-            className="game-btn game-btn-primary text-lg"
+            className="game-btn game-btn-primary text-xl px-10 py-4"
           >
             🔄 Play Again
           </button>
           <button
             onClick={handleLogout}
-            className="game-btn game-btn-danger text-lg"
+            className="game-btn game-btn-danger text-xl px-10 py-4"
           >
             🚪 Logout
           </button>
@@ -255,7 +262,7 @@ export default function ResultsPage() {
                  {readingDetails ? (
                    <div className="p-5 rounded-xl border-2 border-sky-300 bg-linear-to-br from-sky-50 to-indigo-50 space-y-4">
                      <div>
-                       <p className="font-bold text-sky-600 text-xs uppercase tracking-wider mb-1">Target Sentence</p>
+                       <p className="font-bold text-sky-600 text-xs uppercase tracking-wider mb-1">Passage</p>
                        <p className="text-xl font-semibold text-forest-800">&ldquo;{readingDetails.targetSentence}&rdquo;</p>
                      </div>
                      <div>
@@ -269,7 +276,28 @@ export default function ResultsPage() {
                        </div>
                      </div>
                    </div>
-                 ) : <p className="text-gray-500 italic">No reading details found. Read a sentence to view them here.</p>}
+                 ) : <p className="text-gray-500 italic">No reading details found. Read a passage to view them here.</p>}
+
+                 {/* Reading Follow-Up Questions */}
+                 {readingFollowUpDetails && readingFollowUpDetails.length > 0 && (
+                   <div className="mt-6">
+                     <h3 className="text-xl font-bold text-forest-800 mb-4" style={{ fontFamily: "var(--font-display)" }}>📝 Follow-Up Questions</h3>
+                     <div className="space-y-3">
+                       {readingFollowUpDetails.map((q, i) => (
+                         <div key={i} className={`p-4 rounded-xl border-2 ${q.isCorrect ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+                           <p className="font-bold text-gray-800 mb-2">Q{i+1}: {q.prompt}</p>
+                           <p className="text-sm"><span className="font-semibold text-gray-600">Your Answer:</span> {q.userAnswer}</p>
+                           {!q.isCorrect && (
+                             <p className="text-sm mt-1"><span className="font-semibold text-gray-600">Correct Answer:</span> <span className="text-forest-700">{q.correctAnswer}</span></p>
+                           )}
+                           <div className="mt-2 text-sm font-bold">
+                             {q.isCorrect ? <span className="text-green-600">✅ Correct</span> : <span className="text-red-600">❌ Incorrect</span>}
+                           </div>
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+                 )}
               </div>
             )}
 
@@ -279,8 +307,8 @@ export default function ResultsPage() {
                  {writingDetails ? (
                    <div className="p-5 rounded-xl border-2 border-amber-300 bg-linear-to-br from-amber-50 to-orange-50 space-y-4">
                      <div>
-                       <p className="font-bold text-amber-600 text-xs uppercase tracking-wider mb-1">Target Sentence</p>
-                       <p className="text-xl font-semibold text-forest-800">&ldquo;{writingDetails.targetSentence}&rdquo;</p>
+                       <p className="font-bold text-amber-600 text-xs uppercase tracking-wider mb-1">Writing Prompt</p>
+                       <p className="text-xl font-semibold text-forest-800">&ldquo;{writingDetails.targetPrompt || writingDetails.targetSentence}&rdquo;</p>
                      </div>
                      <div>
                        <p className="font-bold text-orange-600 text-xs uppercase tracking-wider mb-1">What We Read</p>
@@ -293,7 +321,28 @@ export default function ResultsPage() {
                        </div>
                      </div>
                    </div>
-                 ) : <p className="text-gray-500 italic">No writing details found. Hand-write a sentence to view them here.</p>}
+                 ) : <p className="text-gray-500 italic">No writing details found. Complete the writing test to view them here.</p>}
+
+                 {/* Writing Follow-Up Questions */}
+                 {writingFollowUpDetails && writingFollowUpDetails.length > 0 && (
+                   <div className="mt-6">
+                     <h3 className="text-xl font-bold text-forest-800 mb-4" style={{ fontFamily: "var(--font-display)" }}>📝 Follow-Up Questions</h3>
+                     <div className="space-y-3">
+                       {writingFollowUpDetails.map((q, i) => (
+                         <div key={i} className={`p-4 rounded-xl border-2 ${q.isCorrect ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+                           <p className="font-bold text-gray-800 mb-2">Q{i+1}: {q.prompt}</p>
+                           <p className="text-sm"><span className="font-semibold text-gray-600">Your Answer:</span> {q.userAnswer}</p>
+                           {!q.isCorrect && (
+                             <p className="text-sm mt-1"><span className="font-semibold text-gray-600">Correct Answer:</span> <span className="text-forest-700">{q.correctAnswer}</span></p>
+                           )}
+                           <div className="mt-2 text-sm font-bold">
+                             {q.isCorrect ? <span className="text-green-600">✅ Correct</span> : <span className="text-red-600">❌ Incorrect</span>}
+                           </div>
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+                 )}
               </div>
             )}
             
@@ -303,6 +352,7 @@ export default function ResultsPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -115,10 +115,10 @@ export default function ConsentPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative">
+    <div className="min-h-screen w-full flex flex-col pt-16 pb-8 overflow-y-auto overflow-x-hidden relative">
       <NatureBackground />
-
-      <div className="w-full max-w-2xl relative" style={{ zIndex: 2 }}>
+      <div className="flex-1 flex flex-col justify-center items-center w-full p-4">
+        <div className="w-full max-w-3xl relative" style={{ zIndex: 2 }}>
         <div
           className={`transition-all duration-700 ${
             showItems ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
@@ -146,7 +146,7 @@ export default function ConsentPage() {
 
           {/* Main card */}
           <div
-            className="glass-card p-8 sm:p-10"
+            className="glass-card p-6 sm:p-12"
             style={{ animation: "pulse-glow 4s ease-in-out infinite" }}
           >
             {/* Title */}
@@ -177,12 +177,12 @@ export default function ConsentPage() {
             </div>
 
             {/* Consent items */}
-            <div className="space-y-3 mb-6">
+            <div className="space-y-4 mb-8">
               {CONSENT_ITEMS.map((item, index) => (
                 <div
                   key={item.key}
                   onClick={() => handleStatementToggle(item.key)}
-                  className="flex items-start gap-3 p-4 rounded-2xl cursor-pointer transition-all duration-300"
+                  className="flex items-start gap-4 p-5 rounded-2xl cursor-pointer transition-all duration-300"
                   style={{
                     background: statements[item.key]
                       ? "linear-gradient(135deg, rgba(232,248,232,0.95), rgba(200,240,200,0.9))"
@@ -378,6 +378,7 @@ export default function ConsentPage() {
               </span>
             ))}
           </div>
+        </div>
         </div>
       </div>
     </div>

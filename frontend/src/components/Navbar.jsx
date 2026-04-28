@@ -45,8 +45,8 @@ export default function Navbar() {
         boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
       }}
     >
-      {/* ✅ CHANGE: pr-12 → pr-20 */}
-      <div className="w-full pl-4 pr-20 h-16 flex items-center justify-between gap-4">
+      {/* Reduced padding and height */}
+      <div className="w-full px-4 h-14 flex items-center justify-between gap-4">
         {/* Logo */}
         <Link
           to="/dashboard"
@@ -89,7 +89,7 @@ export default function Navbar() {
             >
               {user?.studentName || "Student"}
             </span>
-            <span className="text-white text-xs">{dropdownOpen ? "▲" : "▼"}</span>
+            <span className="text-white text-[10px] ml-1">{dropdownOpen ? "▲" : "▼"}</span>
           </button>
 
           {/* Dropdown menu */}

@@ -13,6 +13,10 @@ export function GameProvider({ children }) {
   const [readingDetails, setReadingDetails] = useState(null);
   const [writingDetails, setWritingDetails] = useState(null);
 
+  // Follow-up question details for reading & writing
+  const [readingFollowUpDetails, setReadingFollowUpDetails] = useState([]);
+  const [writingFollowUpDetails, setWritingFollowUpDetails] = useState([]);
+
   const resetGame = () => {
     setAgeGroup(null);
     setQuizScore(0);
@@ -22,6 +26,8 @@ export function GameProvider({ children }) {
     setQuizDetails([]);
     setReadingDetails(null);
     setWritingDetails(null);
+    setReadingFollowUpDetails([]);
+    setWritingFollowUpDetails([]);
   };
 
   const quizAccuracy = quizTotal > 0 ? Math.round((quizScore / quizTotal) * 100) : 0;
@@ -45,6 +51,10 @@ export function GameProvider({ children }) {
         setReadingDetails,
         writingDetails,
         setWritingDetails,
+        readingFollowUpDetails,
+        setReadingFollowUpDetails,
+        writingFollowUpDetails,
+        setWritingFollowUpDetails,
         quizAccuracy,
         resetGame,
       }}

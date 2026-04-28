@@ -35,6 +35,13 @@ export function AuthProvider({ children }) {
   }, []);
 
   const fetchUser = async () => {
+    if (token === "demo-token") {
+      const stored = localStorage.getItem("kidtest_user");
+      if (stored) setUser(JSON.parse(stored));
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch(`${API_URL}/me`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -43,6 +50,7 @@ export function AuthProvider({ children }) {
         const data = await res.json();
         setUser(data);
       } else {
+        // Only logout if the backend explicitly rejects a real token
         logout();
       }
     } catch {

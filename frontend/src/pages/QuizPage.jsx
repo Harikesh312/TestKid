@@ -44,6 +44,10 @@ export default function QuizPage() {
     let userAnswerText = "";
 
     switch (question.type) {
+      case "mcq":
+        correct = selectedAnswer === question.answer;
+        userAnswerText = selectedAnswer || "";
+        break;
       case "letter-match":
       case "tab-match":
         correct = selectedAnswer === question.answer;
@@ -170,6 +174,7 @@ export default function QuizPage() {
 
   const canCheck = () => {
     switch (question.type) {
+      case "mcq":
       case "letter-match":
       case "tab-match":
       case "image-match":
@@ -195,6 +200,55 @@ export default function QuizPage() {
 
   const renderQuestion = () => {
     switch (question.type) {
+      case "mcq":
+        return (
+          <div className="w-full flex flex-col items-center">
+            {question.displayEmoji && (
+              <div className="text-center mb-6">
+                <span className="inline-block text-7xl animate-pop-in">
+                  {question.displayEmoji}
+                </span>
+              </div>
+            )}
+            {question.displayText && (
+              <div className="text-center mb-6">
+                <span
+                  className="inline-block text-5xl font-bold text-forest-800 bg-sun-300/50 rounded-2xl px-8 py-4 animate-pop-in"
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
+                  {question.displayText}
+                </span>
+              </div>
+            )}
+            {question.displaySentence && (
+              <div className="text-center mb-6">
+                <span
+                  className="inline-block text-xl md:text-2xl font-semibold text-candy-purple bg-candy-purple/10 rounded-2xl px-6 py-3 italic animate-pop-in"
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
+                  "{question.displaySentence}"
+                </span>
+              </div>
+            )}
+            <div className="flex flex-col gap-3 w-full max-w-md mx-auto">
+              {question.options.map((opt, idx) => (
+                <button
+                  key={opt}
+                  onClick={() => setSelectedAnswer(opt)}
+                  className={`quiz-option text-lg text-left px-6 py-4 flex items-center gap-3 ${
+                    selectedAnswer === opt ? "selected" : ""
+                  }`}
+                >
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-forest-100 text-forest-700 font-bold text-sm shrink-0">
+                    {String.fromCharCode(65 + idx)}
+                  </span>
+                  <span>{opt}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+
       case "letter-match":
       case "tab-match":
         return (
