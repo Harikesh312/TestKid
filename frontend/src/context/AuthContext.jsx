@@ -135,19 +135,28 @@ export function AuthProvider({ children }) {
 
   const saveObserverQuestions = async (answers) => {
     try {
-      const res = await fetch(`${API_URL}/observer-questions`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ answers }),
-      });
-      if (!res.ok) {
-        throw new Error("Failed to save observer questions");
+      if (token !== "demo-token") {
+        const res = await fetch(`${API_URL}/observer-questions`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ answers }),
+        });
+        if (!res.ok) {
+          throw new Error("Failed to save observer questions");
+        }
       }
     } catch (err) {
-      console.warn("Could not save observer questions:", err.message);
+      console.warn("Could not save observer questions to backend:", err.message);
+    } finally {
+      setUser((prevUser) => {
+        if (!prevUser) return prevUser;
+        const updatedUser = { ...prevUser, observerQuestions: answers };
+        localStorage.setItem("kidtest_user", JSON.stringify(updatedUser));
+        return updatedUser;
+      });
     }
   };
 

@@ -44,6 +44,7 @@ router.post("/signup", async (req, res) => {
         id: user._id,
         studentName: user.studentName,
         email: user.email,
+        observerQuestions: user.observerQuestions || [],
       },
     });
   } catch (error) {
@@ -80,6 +81,7 @@ router.post("/login", async (req, res) => {
         id: user._id,
         studentName: user.studentName,
         email: user.email,
+        observerQuestions: user.observerQuestions || [],
       },
     });
   } catch (error) {
@@ -99,6 +101,7 @@ router.get("/me", authMiddleware, async (req, res) => {
       id: user._id,
       studentName: user.studentName,
       email: user.email,
+      observerQuestions: user.observerQuestions || [],
     });
   } catch (error) {
     res.status(500).json({ message: "Server error" });

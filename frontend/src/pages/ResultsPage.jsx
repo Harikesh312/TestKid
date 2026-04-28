@@ -16,7 +16,7 @@ export default function ResultsPage() {
   const [activeDetails, setActiveDetails] = useState(null);
 
   // Calculate risks (0.0 to 1.0) where 1.0 is max difficulty/risk
-  const observerSum = (user?.observerQuestions || []).reduce((a, b) => a + b, 0);
+  const observerSum = (user?.observerQuestions || []).reduce((a, b) => a + Number(b), 0);
   const observerRisk = observerSum / 20; // 10 questions max 2 each = 20
   const mcqRisk = 1.0 - (quizAccuracy / 100);
 
