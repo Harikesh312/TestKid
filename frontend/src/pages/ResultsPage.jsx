@@ -19,8 +19,22 @@ export default function ResultsPage() {
   const observerSum = (user?.observerQuestions || []).reduce((a, b) => a + b, 0);
   const observerRisk = observerSum / 20; // 10 questions max 2 each = 20
   const mcqRisk = 1.0 - (quizAccuracy / 100);
-  const readingRisk = 1.0 - (readingScore / 100);
-  const writingRisk = 1.0 - (writingScore / 100);
+
+  // Map reading score
+  let readingRisk = 0;
+  let readingLevel = "Fluent";
+  if (readingScore >= 90) { readingRisk = 0; readingLevel = "Fluent"; }
+  else if (readingScore >= 70) { readingRisk = 0.3; readingLevel = "Minor errors"; }
+  else if (readingScore >= 40) { readingRisk = 0.6; readingLevel = "Frequent errors"; }
+  else { readingRisk = 1; readingLevel = "Cannot read"; }
+
+  // Map writing score
+  let writingRisk = 0;
+  let writingLevel = "Clear writing";
+  if (writingScore >= 90) { writingRisk = 0; writingLevel = "Clear writing"; }
+  else if (writingScore >= 70) { writingRisk = 0.3; writingLevel = "Minor mistakes"; }
+  else if (writingScore >= 40) { writingRisk = 0.6; writingLevel = "Poor structure"; }
+  else { writingRisk = 1; writingLevel = "Cannot write"; }
 
   const finalRiskScore = (0.4 * observerRisk) + (0.2 * mcqRisk) + (0.2 * readingRisk) + (0.2 * writingRisk);
 
@@ -85,45 +99,76 @@ export default function ResultsPage() {
     navigate("/");
   };
 
-  const ScoreCard = ({ title, emoji, score, delay, onClick }) => (
+  const handleDownloadReport = () => {
+    const date = new Date().toLocaleDateString();
+    
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "TestKid Student Report Card\n\n";
+    csvContent += `Student Name,${user?.studentName || "Explorer"}\n`;
+    csvContent += `Age Group,${ageGroup || "N/A"}\n`;
+    csvContent += `Date,${date}\n\n`;
+
+    csvContent += "--- MARKS DISTRIBUTION ---\n";
+    csvContent += "Category,Accuracy/Score,Difficulty Score,Level\n";
+    csvContent += `Observer,${observerSum}/20,${observerRisk.toFixed(2)},-\n`;
+    csvContent += `MCQ Quiz,${quizAccuracy}%,${mcqRisk.toFixed(2)},-\n`;
+    csvContent += `Reading,${readingScore}%,${readingRisk.toFixed(2)},${readingLevel}\n`;
+    csvContent += `Writing,${writingScore}%,${writingRisk.toFixed(2)},${writingLevel}\n\n`;
+
+    csvContent += "--- FINAL CLASSIFICATION ---\n";
+    csvContent += `Final Risk Score,${finalRiskScore.toFixed(2)}\n`;
+    csvContent += `Classification,${riskClassification}\n`;
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `${user?.studentName || "Student"}_Report_Card.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const ScoreCard = ({ title, emoji, score, delay, onClick, subtitle, riskValue }) => (
     <div
-      className="glass-card p-6 text-center animate-pop-in cursor-pointer hover:scale-105 transition-transform duration-300 hover:shadow-lg"
+      className="glass-card p-6 text-center animate-pop-in cursor-pointer hover:scale-105 transition-transform duration-300 hover:shadow-lg flex flex-col items-center"
       style={{ animationDelay: `${delay}s` }}
       onClick={onClick}
     >
-      <div className="text-3xl mb-2">{emoji}</div>
+      <div className="text-4xl mb-3">{emoji}</div>
       <h3
-        className="text-lg text-forest-800 mb-3"
+        className="text-xl text-forest-800 font-bold mb-1"
         style={{ fontFamily: "var(--font-display)" }}
       >
         {title}
       </h3>
+      {subtitle && <p className="text-sm font-semibold text-forest-600 mb-4">{subtitle}</p>}
 
-      {/* Progress bar */}
-      <div className="w-full bg-forest-100 rounded-full h-4 mb-3 overflow-hidden border border-forest-200">
-        <div
-          className="h-full rounded-full transition-all duration-1000 ease-out"
-          style={{
-            width: `${score}%`,
-            background:
-              score >= 80
-                ? "linear-gradient(90deg, #5cb85c, #4a9a4a)"
-                : score >= 50
-                  ? "linear-gradient(90deg, #fbbf24, #f59e0b)"
-                  : "linear-gradient(90deg, #f472b6, #ec4899)",
-            transitionDelay: `${delay + 0.3}s`,
-          }}
-        />
+      <div className="bg-white/50 w-full rounded-xl p-3 mb-4 border border-forest-100 shadow-inner">
+         <p className="text-xs text-gray-500 uppercase tracking-wide font-bold mb-1">Difficulty Score</p>
+         <p className="text-2xl font-black text-forest-700">{riskValue.toFixed(2)}</p>
       </div>
 
-      <p
-        className="text-2xl font-bold text-forest-800 mb-2"
-        style={{ fontFamily: "var(--font-display)" }}
-      >
-        {score}%
-      </p>
-
-      <StarRating percentage={score} />
+      {score !== undefined && (
+        <>
+          <div className="w-full bg-forest-100 rounded-full h-3 mb-2 overflow-hidden border border-forest-200">
+            <div
+              className="h-full rounded-full transition-all duration-1000 ease-out"
+              style={{
+                width: `${score}%`,
+                background:
+                  score >= 80
+                    ? "linear-gradient(90deg, #5cb85c, #4a9a4a)"
+                    : score >= 50
+                      ? "linear-gradient(90deg, #fbbf24, #f59e0b)"
+                      : "linear-gradient(90deg, #f472b6, #ec4899)",
+                transitionDelay: `${delay + 0.3}s`,
+              }}
+            />
+          </div>
+          <p className="text-md font-bold text-forest-800 mb-2">Accuracy: {score}%</p>
+          <StarRating percentage={score} />
+        </>
+      )}
     </div>
   );
 
@@ -167,29 +212,66 @@ export default function ResultsPage() {
           </p>
         </div>
 
-        {/* Score Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full mb-12">
-          <ScoreCard
-            title="Q&A Quiz"
-            emoji="📝"
-            score={quizAccuracy}
-            delay={0.2}
-            onClick={() => setActiveDetails('quiz')}
-          />
-          <ScoreCard
-            title="Reading"
-            emoji="🎤"
-            score={readingScore}
-            delay={0.4}
-            onClick={() => setActiveDetails('reading')}
-          />
-          <ScoreCard
-            title="Writing"
-            emoji="✏️"
-            score={writingScore}
-            delay={0.6}
-            onClick={() => setActiveDetails('writing')}
-          />
+        {/* Score Board Formula Details */}
+        <div className="glass-card p-6 md:p-8 mb-12 w-full animate-slide-up bg-white/80">
+          <h2 className="text-2xl font-bold text-forest-800 mb-6 text-center" style={{ fontFamily: "var(--font-display)" }}>
+            📊 Final Score Marks Distribution
+          </h2>
+          <div className="flex flex-col md:flex-row justify-center items-center gap-4 text-lg font-bold text-forest-700 bg-forest-50 rounded-xl p-4 border border-forest-100 mb-8 overflow-x-auto text-center">
+            <div className="whitespace-nowrap flex items-center">
+              <span className="text-forest-900 bg-white px-3 py-1 rounded shadow-sm">0.4</span> <span className="mx-2">× Observer</span>
+            </div>
+            <span className="text-forest-400 hidden md:inline">+</span>
+            <div className="whitespace-nowrap flex items-center">
+              <span className="text-forest-900 bg-white px-3 py-1 rounded shadow-sm">0.2</span> <span className="mx-2">× MCQ</span>
+            </div>
+            <span className="text-forest-400 hidden md:inline">+</span>
+            <div className="whitespace-nowrap flex items-center">
+              <span className="text-forest-900 bg-white px-3 py-1 rounded shadow-sm">0.2</span> <span className="mx-2">× Reading</span>
+            </div>
+            <span className="text-forest-400 hidden md:inline">+</span>
+            <div className="whitespace-nowrap flex items-center">
+              <span className="text-forest-900 bg-white px-3 py-1 rounded shadow-sm">0.2</span> <span className="mx-2">× Writing</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
+            <ScoreCard
+              title="Observer"
+              emoji="👁️"
+              subtitle={`Score: ${observerSum}/20`}
+              riskValue={observerRisk}
+              delay={0.1}
+              onClick={() => {}}
+            />
+            <ScoreCard
+              title="MCQ Quiz"
+              emoji="📝"
+              subtitle={`Correct: ${Math.round((quizAccuracy / 100) * 10)}/10`}
+              score={quizAccuracy}
+              riskValue={mcqRisk}
+              delay={0.2}
+              onClick={() => setActiveDetails('quiz')}
+            />
+            <ScoreCard
+              title="Reading"
+              emoji="🎤"
+              subtitle={`Level: ${readingLevel}`}
+              score={readingScore}
+              riskValue={readingRisk}
+              delay={0.3}
+              onClick={() => setActiveDetails('reading')}
+            />
+            <ScoreCard
+              title="Writing"
+              emoji="✏️"
+              subtitle={`Level: ${writingLevel}`}
+              score={writingScore}
+              riskValue={writingRisk}
+              delay={0.4}
+              onClick={() => setActiveDetails('writing')}
+            />
+          </div>
         </div>
 
         {/* Age Group Badge */}
@@ -213,6 +295,12 @@ export default function ResultsPage() {
 
         {/* Action buttons */}
         <div className="flex flex-col sm:flex-row gap-6 justify-center">
+          <button
+            onClick={handleDownloadReport}
+            className="game-btn game-btn-secondary text-xl px-10 py-4"
+          >
+            📊 Download Report
+          </button>
           <button
             onClick={handlePlayAgain}
             className="game-btn game-btn-primary text-xl px-10 py-4"
