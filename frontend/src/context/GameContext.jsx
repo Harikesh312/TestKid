@@ -1,23 +1,67 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 
 const GameContext = createContext(null);
 
-export function GameProvider({ children }) {
-  const [ageGroup, setAgeGroup] = useState(null); // "5-8" or "8-12"
-  const [quizScore, setQuizScore] = useState(0);
-  const [quizTotal, setQuizTotal] = useState(0);
-  const [readingScore, setReadingScore] = useState(0);
-  const [writingScore, setWritingScore] = useState(0);
+const STORAGE_KEY = "kidtest_game_state";
 
-  const [quizDetails, setQuizDetails] = useState([]);
-  const [readingDetails, setReadingDetails] = useState(null);
-  const [writingDetails, setWritingDetails] = useState(null);
+// Load persisted game state from localStorage
+function loadPersistedState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {
+    // corrupted data – ignore
+  }
+  return null;
+}
+
+// Save game state to localStorage
+function persistState(state) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    // storage full – ignore
+  }
+}
+
+export function GameProvider({ children }) {
+  const saved = loadPersistedState();
+
+  const [ageGroup, setAgeGroup] = useState(saved?.ageGroup ?? null);
+  const [quizScore, setQuizScore] = useState(saved?.quizScore ?? 0);
+  const [quizTotal, setQuizTotal] = useState(saved?.quizTotal ?? 0);
+  const [readingScore, setReadingScore] = useState(saved?.readingScore ?? 0);
+  const [writingScore, setWritingScore] = useState(saved?.writingScore ?? 0);
+
+  const [quizDetails, setQuizDetails] = useState(saved?.quizDetails ?? []);
+  const [readingDetails, setReadingDetails] = useState(saved?.readingDetails ?? null);
+  const [writingDetails, setWritingDetails] = useState(saved?.writingDetails ?? null);
 
   // Follow-up question details for reading & writing
-  const [readingFollowUpDetails, setReadingFollowUpDetails] = useState([]);
-  const [writingFollowUpDetails, setWritingFollowUpDetails] = useState([]);
+  const [readingFollowUpDetails, setReadingFollowUpDetails] = useState(saved?.readingFollowUpDetails ?? []);
+  const [writingFollowUpDetails, setWritingFollowUpDetails] = useState(saved?.writingFollowUpDetails ?? []);
 
-  const resetGame = () => {
+  // Persist to localStorage whenever any value changes
+  useEffect(() => {
+    persistState({
+      ageGroup,
+      quizScore,
+      quizTotal,
+      readingScore,
+      writingScore,
+      quizDetails,
+      readingDetails,
+      writingDetails,
+      readingFollowUpDetails,
+      writingFollowUpDetails,
+    });
+  }, [
+    ageGroup, quizScore, quizTotal, readingScore, writingScore,
+    quizDetails, readingDetails, writingDetails,
+    readingFollowUpDetails, writingFollowUpDetails,
+  ]);
+
+  const resetGame = useCallback(() => {
     setAgeGroup(null);
     setQuizScore(0);
     setQuizTotal(0);
@@ -28,7 +72,8 @@ export function GameProvider({ children }) {
     setWritingDetails(null);
     setReadingFollowUpDetails([]);
     setWritingFollowUpDetails([]);
-  };
+    localStorage.removeItem(STORAGE_KEY);
+  }, []);
 
   const quizAccuracy = quizTotal > 0 ? Math.round((quizScore / quizTotal) * 100) : 0;
 
